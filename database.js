@@ -98,7 +98,6 @@ class UserManager {
         return { success: true };
     }
 
-    // ⭐⭐ ADICIONE ESTA FUNÇÃO AQUI ⭐⭐ - NO FINAL DA CLASSE UserManager
     recuperarLogin() {
         const saved = localStorage.getItem('churchLoggedUser');
         if (saved) {
@@ -109,7 +108,6 @@ class UserManager {
     }
 }
 
-// ⚠️⚠️ A classe ChurchDatabase começa AQUI - a função acima deve estar ANTES desta linha ⚠️⚠️
 class ChurchDatabase {
     constructor() {
         this.userManager = new UserManager();
@@ -401,7 +399,6 @@ class ChurchDatabase {
         }
         return { success: false, message: 'Operação cancelada' };
     }
-}
 
     // 🔐 FUNÇÃO GLOBAL PARA LOGOUT - 100% FUNCIONAL
     logoutGlobal() {
@@ -410,5 +407,6 @@ class ChurchDatabase {
             location.reload();
         }
     }
-    
+}
+
 const churchDB = new ChurchDatabase();

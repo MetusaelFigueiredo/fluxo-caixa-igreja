@@ -73,7 +73,6 @@ class ChurchFinanceApp {
         }
     }
 
-   
     iniciarSistema() {
         this.setupEventListeners();
         this.setCurrentDate();
@@ -245,21 +244,21 @@ class ChurchFinanceApp {
         this.updateTransactionLists();
     }
 
-  updateUserInfo() {
-    const usuario = churchDB.userManager.getUsuarioLogado();
-    if (usuario) {
-        const statusElement = document.getElementById('online-status');
-        if (statusElement) {
-            statusElement.innerHTML = `
-                <i class="fas fa-user"></i> 
-                ${usuario.nome} (${usuario.funcao})
-                <button class="logout-btn" onclick="churchDB.logoutGlobal()">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </button>
-            `;
+    updateUserInfo() {
+        const usuario = churchDB.userManager.getUsuarioLogado();
+        if (usuario) {
+            const statusElement = document.getElementById('online-status');
+            if (statusElement) {
+                statusElement.innerHTML = `
+                    <i class="fas fa-user"></i> 
+                    ${usuario.nome} (${usuario.funcao})
+                    <button class="logout-btn" onclick="churchDB.logoutGlobal()">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                `;
+            }
         }
     }
-}
 
     updateDashboard() {
         let totalCentral = 0;
