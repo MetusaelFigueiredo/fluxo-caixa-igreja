@@ -1,4 +1,4 @@
-/* style.css - Estilos para o Sistema de Fluxo de Caixa da Igreja */
+/* style.css - Estilos completos para o Sistema de Fluxo de Caixa da Igreja */
 :root {
     --primary-color: #2c3e50;
     --secondary-color: #3498db;
@@ -83,6 +83,10 @@ h1 {
 
 .online-status.offline {
     background: var(--danger-color);
+}
+
+.online-status.connecting {
+    background: var(--warning-color);
 }
 
 /* Dashboard */
@@ -251,6 +255,14 @@ button:active {
     box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
 }
 
+.btn-primary {
+    background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+}
+
 /* Config Section */
 .config-section {
     background: #f8f9fa;
@@ -279,6 +291,27 @@ button:active {
 .config-section .form-group button {
     width: auto;
     padding: 12px 20px;
+}
+
+/* Botão de configuração */
+.config-btn {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: auto;
+}
+
+.config-btn:hover {
+    background: white;
+    color: var(--primary-color);
+    transform: none;
+    box-shadow: none;
 }
 
 /* Transactions Section */
@@ -454,6 +487,7 @@ tr:hover {
 .loading {
     opacity: 0.6;
     pointer-events: none;
+    position: relative;
 }
 
 .loading::after {
@@ -473,86 +507,6 @@ tr:hover {
     0% { transform: translate(-50%, -50%) rotate(0deg); }
     100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-    
-    h1 {
-        font-size: 2rem;
-    }
-    
-    .dashboard {
-        grid-template-columns: 1fr;
-        padding: 20px;
-        gap: 15px;
-    }
-    
-    .forms-section {
-        padding: 20px;
-        gap: 20px;
-    }
-    
-    .form-container {
-        padding: 20px;
-    }
-    
-    .transactions-section {
-        margin: 20px;
-    }
-    
-    th, td {
-        padding: 10px 15px;
-    }
-    
-    .online-status {
-        position: relative;
-        top: auto;
-        right: auto;
-        margin-bottom: 15px;
-        display: inline-flex;
-    }
-}
-
-@media (max-width: 480px) {
-    .tabs {
-        flex-direction: column;
-    }
-    
-    .tab {
-        padding: 12px 20px;
-        justify-content: center;
-    }
-    
-    .config-section .form-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .config-section .form-group button {
-        width: 100%;
-    }
-}
-
-/* Print Styles */
-@media print {
-    body {
-        background: white;
-        padding: 0;
-    }
-    
-    .container {
-        box-shadow: none;
-        border-radius: 0;
-    }
-    
-    button, .config-section, .online-status {
-        display: none !important;
-    }
-}
-/* style.css - Adicionar estilos do login no final do arquivo */
 
 /* Login Container */
 .login-container {
@@ -628,25 +582,6 @@ tr:hover {
     font-family: monospace;
 }
 
-/* Logout Button */
-.logout-btn {
-    background: transparent;
-    color: var(--danger-color);
-    border: 1px solid var(--danger-color);
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    margin-left: 10px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.logout-btn:hover {
-    background: var(--danger-color);
-    color: white;
-    transform: none;
-    box-shadow: none;
-}
 /* Modal Google Sheets */
 .modal {
     position: fixed;
@@ -659,16 +594,18 @@ tr:hover {
     align-items: center;
     justify-content: center;
     z-index: 2000;
+    padding: 20px;
 }
 
 .modal-content {
     background: white;
     padding: 30px;
     border-radius: 12px;
-    width: 90%;
+    width: 100%;
     max-width: 500px;
     max-height: 80vh;
     overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 .modal-content h3 {
@@ -677,6 +614,7 @@ tr:hover {
     display: flex;
     align-items: center;
     gap: 10px;
+    font-size: 1.3rem;
 }
 
 .modal-buttons {
@@ -690,6 +628,8 @@ tr:hover {
     width: auto;
     padding: 10px 15px;
     font-size: 0.9rem;
+    flex: 1;
+    min-width: 120px;
 }
 
 .modal-info {
@@ -697,6 +637,12 @@ tr:hover {
     padding: 15px;
     border-radius: 8px;
     font-size: 0.9rem;
+    margin-top: 15px;
+}
+
+.modal-info p {
+    margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .modal-info ol {
@@ -706,22 +652,100 @@ tr:hover {
 
 .modal-info li {
     margin-bottom: 5px;
+    line-height: 1.4;
 }
 
-/* Botão de configuração */
-.config-btn {
-    background: transparent;
-    color: white;
-    border: 1px solid white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    margin-left: 10px;
-    cursor: pointer;
-    transition: all 0.3s;
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .dashboard {
+        grid-template-columns: 1fr;
+        padding: 20px;
+        gap: 15px;
+    }
+    
+    .forms-section {
+        padding: 20px;
+        gap: 20px;
+    }
+    
+    .form-container {
+        padding: 20px;
+    }
+    
+    .transactions-section {
+        margin: 20px;
+    }
+    
+    th, td {
+        padding: 10px 15px;
+    }
+    
+    .online-status {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-bottom: 15px;
+        display: inline-flex;
+    }
+    
+    .modal-content {
+        padding: 20px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+    }
+    
+    .modal-buttons button {
+        width: 100%;
+    }
 }
 
-.config-btn:hover {
-    background: white;
-    color: var(--primary-color);
+@media (max-width: 480px) {
+    .tabs {
+        flex-direction: column;
+    }
+    
+    .tab {
+        padding: 12px 20px;
+        justify-content: center;
+    }
+    
+    .config-section .form-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .config-section .form-group button {
+        width: 100%;
+    }
+    
+    .login-box {
+        padding: 25px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+    }
+    
+    .container {
+        box-shadow: none;
+        border-radius: 0;
+    }
+    
+    button, .config-section, .online-status, .modal {
+        display: none !important;
+    }
 }
