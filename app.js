@@ -253,27 +253,28 @@ class ChurchFinanceApp {
     }
 
     updateUserInfo() {
-        const usuario = churchDB.userManager.getUsuarioLogado();
-        if (usuario) {
-            const statusElement = document.getElementById('online-status');
-            if (statusElement) {
-                statusElement.innerHTML = `
-                    <i class="fas fa-user"></i> 
-                    ${usuario.nome} (${usuario.funcao})
-                    <button class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Sair
-                    </button>
-                `;
-                
-                // ⭐⭐ CORREÇÃO DO LOGOUT ⭐⭐
-                // Adicionar event listener ao botão de logout
-                const logoutBtn = statusElement.querySelector('.logout-btn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', () => this.fazerLogout());
+    const usuario = churchDB.userManager.getUsuarioLogado();
+    if (usuario) {
+        const statusElement = document.getElementById('online-status');
+        if (statusElement) {
+            statusElement.innerHTML = `
+                <i class="fas fa-user"></i> 
+                ${usuario.nome} (${usuario.funcao})
+                <button id="logout-button" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            `;
+            
+            // ⭐⭐ CORREÇÃO DIRETA - atribuir o evento diretamente ⭐⭐
+            document.getElementById('logout-button').onclick = () => {
+                if (confirm('Deseja sair do sistema?')) {
+                    churchDB.userManager.fazerLogout();
+                    location.reload();
                 }
-            }
+            };
         }
     }
+}
 
     updateDashboard() {
         let totalCentral = 0;
