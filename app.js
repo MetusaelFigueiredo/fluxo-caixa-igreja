@@ -9,13 +9,10 @@ class ChurchFinanceApp {
     }
 
     async init() {
-    if (churchDB.userManager.estaLogado()) {
-        // Se já está logado, mostrar sistema diretamente
-        this.mostrarSistema();
-    } else {
+        // Sempre começa com a tela de login
         this.mostrarLogin();
     }
-}
+
     mostrarLogin() {
         document.body.innerHTML = `
             <div class="login-container">
@@ -49,7 +46,7 @@ class ChurchFinanceApp {
                     </form>
                     
                     <div class="login-info">
-                       <p><i class="fas fa-info-circle"></i> Entre em contato com o administrador para obter acesso</p>
+                        <p><i class="fas fa-info-circle"></i> Entre em contato com o administrador para obter acesso</p>
                     </div>
                 </div>
             </div>
@@ -68,45 +65,43 @@ class ChurchFinanceApp {
         const resultado = churchDB.userManager.fazerLogin(usuario, senha);
         
         if (resultado.success) {
-            this.showNotification(`Bem-vindo, ${resultado.usuario.nome}!`, 'success');
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
+            // Recarrega a página completamente - método mais confiável
+            location.reload();
         } else {
             this.showNotification(resultado.error, 'error');
         }
     }
 
     fazerLogout() {
-    if (confirm('Deseja sair do sistema?')) {
-        churchDB.userManager.fazerLogout();
-        this.showNotification('Logout realizado com sucesso!', 'success');
-        setTimeout(() => {
-            this.mostrarLogin();
-        }, 500);
+        if (confirm('Deseja sair do sistema?')) {
+            churchDB.userManager.fazerLogout();
+            // Recarrega para voltar à tela de login
+            location.reload();
+        }
     }
-}
 
-    mostrarSistema() {
-    // Em vez de recarregar a página, mostramos o conteúdo diretamente
-    document.body.innerHTML = document.querySelector('.container').outerHTML;
-    this.setupEventListeners();
-    this.setCurrentDate();
-    this.loadData().then(() => {
-        this.updateUI();
-        this.setupTabs();
-    });
-}
+    // Esta função só é chamada quando já está logado (página recarregada)
+    iniciarSistema() {
+        this.setupEventListeners();
+        this.setCurrentDate();
+        this.loadData().then(() => {
+            this.updateUI();
+            this.setupTabs();
+        });
+    }
 
     setupEventListeners() {
+        // Formulário de entrada
         document.getElementById('entrada-form').addEventListener('submit', async (e) => {
             await this.handleEntrada(e);
         });
 
+        // Formulário de saída
         document.getElementById('saida-form').addEventListener('submit', async (e) => {
             await this.handleSaida(e);
         });
 
+        // Enter para submeter forms
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && e.target.form) {
                 e.target.form.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -479,8 +474,8 @@ class ChurchFinanceApp {
         notification.className = `notification ${type} show`;
         
         setTimeout(() => {
-    this.mostrarSistema();
-            }, 500);
+            notification.classList.remove('show');
+        }, 4000);
     }
 
     async testConnection() {
@@ -506,4 +501,10 @@ class ChurchFinanceApp {
     }
 }
 
+// Inicialização inteligente - verifica se já está logado
 const app = new ChurchFinanceApp();
+
+// Se já está logado, inicia o sistema normalmente
+if (churchDB.userManager.estaLogado()) {
+    app.iniciarSistema();
+}
