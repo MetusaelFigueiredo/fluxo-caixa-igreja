@@ -5,387 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fluxo de Caixa - Igreja</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --success-color: #27ae60;
-            --danger-color: #e74c3c;
-            --warning-color: #f39c12;
-            --light-color: #ecf0f1;
-            --dark-color: #34495e;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: var(--dark-color);
-            line-height: 1.6;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        header {
-            background: linear-gradient(135deg, var(--primary-color), #1a2530);
-            color: white;
-            padding: 30px 0;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" opacity="0.1"><text x="50" y="50" font-size="10" text-anchor="middle" fill="white">✝</text></svg>');
-        }
-        
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            position: relative;
-        }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            position: relative;
-        }
-        
-        .online-status {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--success-color);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 30px;
-            background: #f8f9fa;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border-top: 5px solid;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .card h3 {
-            margin-bottom: 15px;
-            color: var(--primary-color);
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .card-value {
-            font-size: 2rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .card-central { border-top-color: var(--secondary-color); }
-        .card-local { border-top-color: var(--success-color); }
-        .card-missao { border-top-color: #9b59b6; }
-        .card-construcao { border-top-color: var(--warning-color); }
-        
-        .forms-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            padding: 30px;
-        }
-        
-        @media (max-width: 768px) {
-            .forms-section {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .form-container {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e9ecef;
-        }
-        
-        .form-container h2 {
-            margin-bottom: 20px;
-            color: var(--primary-color);
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f1f3f4;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--dark-color);
-        }
-        
-        input, select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-        
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-        }
-        
-        button {
-            background: linear-gradient(135deg, var(--secondary-color), #2980b9);
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            transition: all 0.3s;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, var(--danger-color), #c0392b);
-        }
-        
-        .btn-danger:hover {
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
-        }
-        
-        .transactions-section {
-            background: white;
-            border-radius: 12px;
-            margin: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
-        
-        .transactions-section h2 {
-            padding: 25px 30px;
-            background: #f8f9fa;
-            color: var(--primary-color);
-            border-bottom: 1px solid #e9ecef;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-        }
-        
-        .tab {
-            padding: 15px 30px;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            font-weight: 500;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .tab.active {
-            border-bottom: 3px solid var(--secondary-color);
-            color: var(--secondary-color);
-            background: white;
-        }
-        
-        .tab:hover:not(.active) {
-            background: #e9ecef;
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 0;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 15px 20px;
-            text-align: left;
-            border-bottom: 1px solid #e9ecef;
-        }
-        
-        th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-        
-        tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .delete-btn {
-            background: transparent;
-            color: var(--danger-color);
-            border: none;
-            cursor: pointer;
-            font-size: 1.2rem;
-            width: auto;
-            padding: 8px 12px;
-            border-radius: 6px;
-            transition: background 0.3s;
-        }
-        
-        .delete-btn:hover {
-            background: #ffeaea;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .info-text {
-            background: #e8f4fd;
-            border-left: 4px solid var(--secondary-color);
-            padding: 20px;
-            margin-bottom: 25px;
-            border-radius: 8px;
-        }
-        
-        .info-text ul {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-        
-        .info-text li {
-            margin-bottom: 5px;
-        }
-        
-        .export-section {
-            padding: 20px 30px;
-            background: #f8f9fa;
-            border-top: 1px solid #e9ecef;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .export-btn {
-            width: auto;
-            padding: 10px 20px;
-            font-size: 0.9rem;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 8px;
-            color: white;
-            font-weight: 500;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            transform: translateX(150%);
-            transition: transform 0.3s;
-            z-index: 1000;
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification.success {
-            background: var(--success-color);
-        }
-        
-        .notification.error {
-            background: var(--danger-color);
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #6c757d;
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="online-status">
-                <i class="fas fa-cloud"></i> ONLINE
+            <div class="online-status" id="online-status">
+                <i class="fas fa-cloud"></i> <span id="status-text">Conectando...</span>
             </div>
             <h1><i class="fas fa-church"></i> Fluxo de Caixa - Igreja</h1>
             <p class="subtitle">Sistema de gestão financeira para sua comunidade</p>
@@ -492,7 +118,8 @@
                 </form>
             </div>
         </div>
-        
+
+        <!-- Seção de Histórico de Transações -->
         <div class="transactions-section">
             <h2><i class="fas fa-history"></i> Histórico de Transações</h2>
             
@@ -517,7 +144,14 @@
                         </tr>
                     </thead>
                     <tbody id="entradas-body">
-                        <!-- As entradas serão inseridas aqui via JavaScript -->
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>Nenhuma entrada registrada</p>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -534,254 +168,6 @@
                         </tr>
                     </thead>
                     <tbody id="saidas-body">
-                        <!-- As saídas serão inseridas aqui via JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <div class="export-section">
-                <button class="export-btn" id="export-data">
-                    <i class="fas fa-download"></i> Exportar Dados
-                </button>
-                <button class="export-btn btn-danger" id="clear-data">
-                    <i class="fas fa-trash"></i> Limpar Todos os Dados
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div class="notification" id="notification"></div>
-
-    <script>
-        // Sistema melhorado para uso online
-        class ChurchFinanceSystem {
-            constructor() {
-                this.transactions = {
-                    entradas: [],
-                    saidas: []
-                };
-                this.init();
-            }
-            
-            init() {
-                this.loadData();
-                this.setupEventListeners();
-                this.updateUI();
-                this.setCurrentDate();
-            }
-            
-            loadData() {
-                const saved = localStorage.getItem('churchFinanceOnline');
-                if (saved) {
-                    this.transactions = JSON.parse(saved);
-                }
-            }
-            
-            saveData() {
-                localStorage.setItem('churchFinanceOnline', JSON.stringify(this.transactions));
-            }
-            
-            setCurrentDate() {
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('data-entrada').value = today;
-                document.getElementById('data-saida').value = today;
-            }
-            
-            setupEventListeners() {
-                // Formulários
-                document.getElementById('entrada-form').addEventListener('submit', (e) => this.handleEntrada(e));
-                document.getElementById('saida-form').addEventListener('submit', (e) => this.handleSaida(e));
-                
-                // Tabs
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.addEventListener('click', (e) => this.switchTab(e));
-                });
-                
-                // Exportação
-                document.getElementById('export-data').addEventListener('click', () => this.exportData());
-                document.getElementById('clear-data').addEventListener('click', () => this.clearData());
-            }
-            
-            handleEntrada(e) {
-                e.preventDefault();
-                
-                const tipo = document.getElementById('tipo-entrada').value;
-                const valor = parseFloat(document.getElementById('valor-entrada').value);
-                const descricao = document.getElementById('descricao-entrada').value;
-                const data = document.getElementById('data-entrada').value;
-                
-                this.transactions.entradas.push({
-                    id: Date.now(),
-                    tipo,
-                    valor,
-                    descricao,
-                    data,
-                    timestamp: new Date().toISOString()
-                });
-                
-                this.saveData();
-                this.updateUI();
-                this.showNotification('Entrada registrada com sucesso!', 'success');
-                e.target.reset();
-                this.setCurrentDate();
-            }
-            
-            handleSaida(e) {
-                e.preventDefault();
-                
-                const categoria = document.getElementById('categoria-saida').value;
-                const valor = parseFloat(document.getElementById('valor-saida').value);
-                const descricao = document.getElementById('descricao-saida').value;
-                const data = document.getElementById('data-saida').value;
-                
-                this.transactions.saidas.push({
-                    id: Date.now(),
-                    categoria,
-                    valor,
-                    descricao,
-                    data,
-                    timestamp: new Date().toISOString()
-                });
-                
-                this.saveData();
-                this.updateUI();
-                this.showNotification('Saída registrada com sucesso!', 'success');
-                e.target.reset();
-                this.setCurrentDate();
-            }
-            
-            deleteEntrada(id) {
-                this.transactions.entradas = this.transactions.entradas.filter(e => e.id !== id);
-                this.saveData();
-                this.updateUI();
-                this.showNotification('Entrada excluída!', 'success');
-            }
-            
-            deleteSaida(id) {
-                this.transactions.saidas = this.transactions.saidas.filter(s => s.id !== id);
-                this.saveData();
-                this.updateUI();
-                this.showNotification('Saída excluída!', 'success');
-            }
-            
-            switchTab(e) {
-                const tabName = e.currentTarget.getAttribute('data-tab');
-                
-                // Atualizar tabs
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                e.currentTarget.classList.add('active');
-                
-                // Atualizar conteúdo
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(`${tabName}-tab`).classList.add('active');
-            }
-            
-            updateUI() {
-                this.updateDashboard();
-                this.updateEntradasTable();
-                this.updateSaidasTable();
-            }
-            
-            updateDashboard() {
-                let totalCentral = 0;
-                let totalLocal = 0;
-                let totalMissao = 0;
-                let totalConstrucao = 0;
-                
-                // Calcular totais das entradas
-                this.transactions.entradas.forEach(entrada => {
-                    if (entrada.tipo === 'dizimo-oferta') {
-                        totalCentral += entrada.valor * 0.6;
-                        totalLocal += entrada.valor * 0.4;
-                    } else if (entrada.tipo === 'santa-ceia') {
-                        totalMissao += entrada.valor;
-                    } else if (entrada.tipo === 'construcao') {
-                        totalConstrucao += entrada.valor;
-                    }
-                });
-                
-                // Subtrair saídas do total local
-                this.transactions.saidas.forEach(saida => {
-                    totalLocal -= saida.valor;
-                });
-                
-                // Atualizar valores no dashboard
-                document.getElementById('central-value').textContent = this.formatCurrency(totalCentral);
-                document.getElementById('local-value').textContent = this.formatCurrency(totalLocal);
-                document.getElementById('missao-value').textContent = this.formatCurrency(totalMissao);
-                document.getElementById('construcao-value').textContent = this.formatCurrency(totalConstrucao);
-            }
-            
-            updateEntradasTable() {
-                const tbody = document.getElementById('entradas-body');
-                tbody.innerHTML = '';
-                
-                if (this.transactions.entradas.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="5">
-                                <div class="empty-state">
-                                    <i class="fas fa-inbox"></i>
-                                    <p>Nenhuma entrada registrada</p>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-                
-                // Ordenar por data (mais recente primeiro)
-                const entradasOrdenadas = [...this.transactions.entradas].sort((a, b) => 
-                    new Date(b.data) - new Date(a.data)
-                );
-                
-                entradasOrdenadas.forEach(entrada => {
-                    const row = document.createElement('tr');
-                    
-                    let tipoTexto = '';
-                    let tipoIcon = '';
-                    
-                    switch(entrada.tipo) {
-                        case 'dizimo-oferta':
-                            tipoTexto = 'Dízimo e Oferta';
-                            tipoIcon = 'fas fa-hand-holding-usd';
-                            break;
-                        case 'construcao':
-                            tipoTexto = 'Construção';
-                            tipoIcon = 'fas fa-hammer';
-                            break;
-                        case 'santa-ceia':
-                            tipoTexto = 'Santa Ceia';
-                            tipoIcon = 'fas fa-wine-glass';
-                            break;
-                    }
-                    
-                    row.innerHTML = `
-                        <td>${this.formatDate(entrada.data)}</td>
-                        <td><i class="${tipoIcon}"></i> ${tipoTexto}</td>
-                        <td>${entrada.descricao}</td>
-                        <td><strong>${this.formatCurrency(entrada.valor)}</strong></td>
-                        <td>
-                            <button class="delete-btn" onclick="churchFinance.deleteEntrada(${entrada.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    `;
-                    
-                    tbody.appendChild(row);
-                });
-            }
-            
-            updateSaidasTable() {
-                const tbody = document.getElementById('saidas-body');
-                tbody.innerHTML = '';
-                
-                if (this.transactions.saidas.length === 0) {
-                    tbody.innerHTML = `
                         <tr>
                             <td colspan="5">
                                 <div class="empty-state">
@@ -790,87 +176,38 @@
                                 </div>
                             </td>
                         </tr>
-                    `;
-                    return;
-                }
-                
-                // Ordenar por data (mais recente primeiro)
-                const saidasOrdenadas = [...this.transactions.saidas].sort((a, b) => 
-                    new Date(b.data) - new Date(a.data)
-                );
-                
-                saidasOrdenadas.forEach(saida => {
-                    const row = document.createElement('tr');
-                    
-                    row.innerHTML = `
-                        <td>${this.formatDate(saida.data)}</td>
-                        <td>${saida.categoria}</td>
-                        <td>${saida.descricao}</td>
-                        <td><strong>${this.formatCurrency(saida.valor)}</strong></td>
-                        <td>
-                            <button class="delete-btn" onclick="churchFinance.deleteSaida(${saida.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    `;
-                    
-                    tbody.appendChild(row);
-                });
-            }
-            
-            exportData() {
-                const data = {
-                    exportDate: new Date().toISOString(),
-                    transactions: this.transactions
-                };
-                
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `backup-fluxo-caixa-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                this.showNotification('Dados exportados com sucesso!', 'success');
-            }
-            
-            clearData() {
-                if (confirm('Tem certeza que deseja limpar TODOS os dados? Esta ação não pode ser desfeita.')) {
-                    this.transactions = { entradas: [], saidas: [] };
-                    this.saveData();
-                    this.updateUI();
-                    this.showNotification('Todos os dados foram limpos!', 'success');
-                }
-            }
-            
-            showNotification(message, type) {
-                const notification = document.getElementById('notification');
-                notification.textContent = message;
-                notification.className = `notification ${type} show`;
-                
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                }, 3000);
-            }
-            
-            formatCurrency(value) {
-                return new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                }).format(value);
-            }
-            
-            formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('pt-BR');
-            }
-        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        // Inicializar o sistema
-        const churchFinance = new ChurchFinanceSystem();
-    </script>
+        <!-- Configuração do Banco de Dados -->
+        <div class="config-section">
+            <h3><i class="fas fa-database"></i> Configuração do Banco de Dados Online</h3>
+            <div class="form-group">
+                <label for="db-url">URL da API</label>
+                <input type="url" id="db-url" placeholder="https://sua-api.com/endpoint">
+                <small>URL do seu backend para salvar os dados online</small>
+            </div>
+            <div class="form-group">
+                <button onclick="app.testConnection()" class="btn-success">
+                    <i class="fas fa-plug"></i> Testar Conexão
+                </button>
+                <button onclick="app.exportData()" class="btn-warning">
+                    <i class="fas fa-download"></i> Exportar Dados
+                </button>
+                <button onclick="app.clearData()" class="btn-danger">
+                    <i class="fas fa-trash"></i> Limpar Dados Locais
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificação -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Carregar os scripts -->
+    <script src="database.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
