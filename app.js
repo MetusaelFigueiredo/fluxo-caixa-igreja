@@ -252,27 +252,26 @@ class ChurchFinanceApp {
         this.updateTransactionLists();
     }
 
-    updateUserInfo() {
+   updateUserInfo() {
     const usuario = churchDB.userManager.getUsuarioLogado();
-    if (usuario) {
-        const statusElement = document.getElementById('online-status');
-        if (statusElement) {
-            statusElement.innerHTML = `
-                <i class="fas fa-user"></i> 
-                ${usuario.nome} (${usuario.funcao})
-                <button id="logout-button" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </button>
-            `;
-            
-            // ⭐⭐ CORREÇÃO DIRETA - atribuir o evento diretamente ⭐⭐
-            document.getElementById('logout-button').onclick = () => {
-                if (confirm('Deseja sair do sistema?')) {
-                    churchDB.userManager.fazerLogout();
-                    location.reload();
-                }
-            };
-        }
+    const statusElement = document.getElementById('online-status');
+    const logoutBtn = document.getElementById('logout-btn');
+    const statusText = document.getElementById('status-text');
+    
+    if (usuario && statusElement && logoutBtn && statusText) {
+        // Mostra informações do usuário
+        statusText.innerHTML = `<i class="fas fa-user"></i> ${usuario.nome} (${usuario.funcao})`;
+        
+        // Mostra o botão de logout
+        logoutBtn.style.display = 'inline-block';
+        
+        // ⭐ EVENT LISTENER SIMPLES E DIRETO ⭐
+        logoutBtn.onclick = () => {
+            if (confirm('Deseja sair do sistema?')) {
+                churchDB.userManager.fazerLogout();
+                location.reload();
+            }
+        };
     }
 }
 
