@@ -5,12 +5,13 @@ class ChurchFinanceApp {
             entradas: [],
             saidas: []
         };
-        this.init();
-    }
-
-    async init() {
-        // Sempre começa com a tela de login
-        this.mostrarLogin();
+        
+        // Verifica se deve mostrar login ou sistema
+        if (churchDB.userManager.estaLogado()) {
+            this.iniciarSistema();
+        } else {
+            this.mostrarLogin();
+        }
     }
 
     mostrarLogin() {
@@ -65,7 +66,7 @@ class ChurchFinanceApp {
         const resultado = churchDB.userManager.fazerLogin(usuario, senha);
         
         if (resultado.success) {
-            // Recarrega a página completamente - método mais confiável
+            // Recarrega a página completamente
             location.reload();
         } else {
             this.showNotification(resultado.error, 'error');
@@ -80,7 +81,6 @@ class ChurchFinanceApp {
         }
     }
 
-    // Esta função só é chamada quando já está logado (página recarregada)
     iniciarSistema() {
         this.setupEventListeners();
         this.setCurrentDate();
@@ -501,12 +501,5 @@ class ChurchFinanceApp {
     }
 }
 
-// Inicialização inteligente - verifica se já está logado
-if (churchDB.userManager.estaLogado()) {
-    // Se já está logado, mostra o sistema diretamente
-    const app = new ChurchFinanceApp();
-    app.iniciarSistema();
-} else {
-    // Se não está logado, mostra a tela de login
-    const app = new ChurchFinanceApp();
-}
+// Inicialização simples - a classe já decide se mostra login ou sistema
+const app = new ChurchFinanceApp();
