@@ -1,17 +1,115 @@
-// database.js - Sistema de gerenciamento de banco de dados online
+// database.js - Sistema de gerenciamento de banco de dados online com usuários
+class UserManager {
+    constructor() {
+        this.usuarios = this.carregarUsuarios();
+        this.usuarioLogado = null;
+    }
+
+    carregarUsuarios() {
+        // Usuários padrão - pode ser alterado posteriormente
+        const usuariosPadrao = [
+            { 
+                id: 'pastor', 
+                senha: 'pastor123', 
+                nome: 'Pastor João', 
+                funcao: 'Liderança',
+                email: 'pastor@igreja.com'
+            },
+            { 
+                id: 'tesoureiro', 
+                senha: 'tesouro456', 
+                nome: 'Irmão José', 
+                funcao: 'Tesoureiro',
+                email: 'tesoureiro@igreja.com'
+            },
+            { 
+                id: 'diacono', 
+                senha: 'diacono789', 
+                nome: 'Diácono Pedro', 
+                funcao: 'Diácono',
+                email: 'diacono@igreja.com'
+            },
+            { 
+                id: 'secretario', 
+                senha: 'secret123', 
+                nome: 'Irmã Maria', 
+                funcao: 'Secretária',
+                email: 'secretaria@igreja.com'
+            }
+        ];
+
+        // Tentar carregar usuários personalizados, senão usar os padrão
+        const usuariosSalvos = localStorage.getItem('churchUsers');
+        return usuariosSalvos ? JSON.parse(usuariosSalvos) : usuariosPadrao;
+    }
+
+    salvarUsuarios() {
+        localStorage.setItem('churchUsers', JSON.stringify(this.usuarios));
+    }
+
+    fazerLogin(usuarioId, senha) {
+        const usuario = this.usuarios.find(u => u.id === usuarioId && u.senha === senha);
+        
+        if (usuario) {
+            this.usuarioLogado = usuario;
+            localStorage.setItem('churchLoggedUser', JSON.stringify(usuario));
+            return { success: true, usuario };
+        } else {
+            return { success: false, error: 'Usuário ou senha incorretos' };
+        }
+    }
+
+    fazerLogout() {
+        this.usuarioLogado = null;
+        localStorage.removeItem('churchLoggedUser');
+    }
+
+    getUsuarioLogado() {
+        if (!this.usuarioLogado) {
+            const saved = localStorage.getItem('churchLoggedUser');
+            this.usuarioLogado = saved ? JSON.parse(saved) : null;
+        }
+        return this.usuarioLogado;
+    }
+
+    estaLogado() {
+        return this.getUsuarioLogado() !== null;
+    }
+
+    alterarSenha(usuarioId, senhaAtual, novaSenha) {
+        const usuario = this.usuarios.find(u => u.id === usuarioId);
+        
+        if (usuario && usuario.senha === senhaAtual) {
+            usuario.senha = novaSenha;
+            this.salvarUsuarios();
+            return { success: true };
+        } else {
+            return { success: false, error: 'Senha atual incorreta' };
+        }
+    }
+
+    adicionarUsuario(novoUsuario) {
+        if (this.usuarios.find(u => u.id === novoUsuario.id)) {
+            return { success: false, error: 'ID de usuário já existe' };
+        }
+        
+        this.usuarios.push(novoUsuario);
+        this.salvarUsuarios();
+        return { success: true };
+    }
+}
+
 class ChurchDatabase {
     constructor() {
-        // URL base da API - você pode mudar para seu backend real
-        this.baseURL = 'https://jsonplaceholder.typicode.com'; // URL de exemplo
+        this.userManager = new UserManager();
+        this.baseURL = 'https://jsonplaceholder.typicode.com';
         this.isConnected = false;
         this.pendingOperations = [];
         this.init();
     }
 
     init() {
-        // Carregar configuração salva
         this.loadConfig();
-        // Tentar conectar automaticamente
         this.testConnection();
     }
 
@@ -31,14 +129,12 @@ class ChurchDatabase {
         }
     }
 
-    // Testar conexão com o banco
     async testConnection() {
         try {
             this.updateStatus('Conectando...', 'connecting');
             
-            this.saveConfig(); // Salvar URL atual
+            this.saveConfig();
 
-            // Teste simples de conexão
             const response = await fetch(`${this.baseURL}/posts/1`, {
                 method: 'GET',
                 headers: {
@@ -66,15 +162,18 @@ class ChurchDatabase {
         }
     }
 
-    // Salvar entrada no banco
     async saveEntrada(entradaData) {
+        const usuario = this.userManager.getUsuarioLogado();
         const operation = {
             type: 'entrada',
-            data: entradaData,
+            data: {
+                ...entradaData,
+                registradoPor: usuario ? usuario.id : 'anonimo',
+                registradoPorNome: usuario ? usuario.nome : 'Anônimo'
+            },
             timestamp: new Date().toISOString()
         };
 
-        // Se offline, armazenar localmente
         if (!this.isConnected) {
             this.storeOffline(operation);
             return { 
@@ -85,8 +184,7 @@ class ChurchDatabase {
         }
 
         try {
-            // Simular envio para API real
-            const response = await this.simulateApiCall('/entradas', 'POST', entradaData);
+            const response = await this.simulateApiCall('/entradas', 'POST', operation.data);
             
             if (response.success) {
                 return { 
@@ -99,7 +197,6 @@ class ChurchDatabase {
             }
             
         } catch (error) {
-            // Se falhar, salvar offline
             this.storeOffline(operation);
             return { 
                 success: true, 
@@ -109,11 +206,15 @@ class ChurchDatabase {
         }
     }
 
-    // Salvar saída no banco
     async saveSaida(saidaData) {
+        const usuario = this.userManager.getUsuarioLogado();
         const operation = {
             type: 'saida',
-            data: saidaData,
+            data: {
+                ...saidaData,
+                registradoPor: usuario ? usuario.id : 'anonimo',
+                registradoPorNome: usuario ? usuario.nome : 'Anônimo'
+            },
             timestamp: new Date().toISOString()
         };
 
@@ -127,7 +228,7 @@ class ChurchDatabase {
         }
 
         try {
-            const response = await this.simulateApiCall('/saidas', 'POST', saidaData);
+            const response = await this.simulateApiCall('/saidas', 'POST', operation.data);
             
             if (response.success) {
                 return { 
@@ -149,15 +250,12 @@ class ChurchDatabase {
         }
     }
 
-    // Carregar todas as transações
     async loadTransactions() {
         try {
             if (!this.isConnected) {
-                // Carregar do localStorage se offline
                 return this.loadFromLocalStorage();
             }
 
-            // Simular carregamento da API
             const response = await this.simulateApiCall('/transactions', 'GET');
             
             if (response.success) {
@@ -172,11 +270,9 @@ class ChurchDatabase {
         }
     }
 
-    // Deletar transação
     async deleteTransaction(type, id) {
         try {
             if (!this.isConnected) {
-                // Deletar localmente se offline
                 this.deleteLocal(type, id);
                 return { success: true, offline: true };
             }
@@ -190,17 +286,11 @@ class ChurchDatabase {
         }
     }
 
-    // ========== MÉTODOS AUXILIARES ==========
-
-    // Simular chamada API (substituir por API real)
     async simulateApiCall(endpoint, method, data = null) {
-        // Simular delay de rede
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Gerar ID único
         const generateId = () => Date.now() + Math.random().toString(36).substr(2, 9);
         
-        // Simular resposta bem-sucedida
         return {
             success: true,
             id: generateId(),
@@ -211,14 +301,12 @@ class ChurchDatabase {
         };
     }
 
-    // Armazenar operação offline
     storeOffline(operation) {
         const pending = this.getPendingOperations();
         pending.push(operation);
         localStorage.setItem('churchDB_pending', JSON.stringify(pending));
     }
 
-    // Processar operações pendentes quando online
     async processPendingOperations() {
         const pending = this.getPendingOperations();
         if (pending.length === 0) return;
@@ -237,17 +325,14 @@ class ChurchDatabase {
             }
         }
 
-        // Limpar operações processadas
         localStorage.removeItem('churchDB_pending');
     }
 
-    // Carregar operações pendentes
     getPendingOperations() {
         const pending = localStorage.getItem('churchDB_pending');
         return pending ? JSON.parse(pending) : [];
     }
 
-    // Carregar do localStorage
     loadFromLocalStorage() {
         const saved = localStorage.getItem('churchFinance_data');
         if (saved) {
@@ -256,12 +341,10 @@ class ChurchDatabase {
         return { entradas: [], saidas: [] };
     }
 
-    // Salvar no localStorage
     saveToLocalStorage(data) {
         localStorage.setItem('churchFinance_data', JSON.stringify(data));
     }
 
-    // Deletar localmente
     deleteLocal(type, id) {
         const data = this.loadFromLocalStorage();
         if (type === 'entradas') {
@@ -272,7 +355,6 @@ class ChurchDatabase {
         this.saveToLocalStorage(data);
     }
 
-    // Atualizar status na interface
     updateStatus(message, status) {
         const statusElement = document.getElementById('status-text');
         const statusContainer = document.getElementById('online-status');
@@ -283,7 +365,6 @@ class ChurchDatabase {
         }
     }
 
-    // Exportar dados para backup
     exportData() {
         const data = this.loadFromLocalStorage();
         const blob = new Blob([JSON.stringify(data, null, 2)], { 
@@ -301,7 +382,6 @@ class ChurchDatabase {
         return { success: true, message: 'Backup exportado com sucesso!' };
     }
 
-    // Limpar todos os dados
     clearData() {
         if (confirm('Tem certeza que deseja limpar TODOS os dados? Esta ação não pode ser desfeita.')) {
             localStorage.removeItem('churchFinance_data');
@@ -312,5 +392,4 @@ class ChurchDatabase {
     }
 }
 
-// Instância global do banco de dados
 const churchDB = new ChurchDatabase();

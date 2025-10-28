@@ -1,4 +1,4 @@
-// app.js - Lógica principal do sistema de fluxo de caixa
+// app.js - Lógica principal do sistema de fluxo de caixa com login
 class ChurchFinanceApp {
     constructor() {
         this.transactions = {
@@ -9,27 +9,103 @@ class ChurchFinanceApp {
     }
 
     async init() {
-        this.setupEventListeners();
-        this.setCurrentDate();
-        await this.loadData();
-        this.updateUI();
+        if (churchDB.userManager.estaLogado()) {
+            this.mostrarSistema();
+            this.setupEventListeners();
+            this.setCurrentDate();
+            await this.loadData();
+            this.updateUI();
+            this.setupTabs();
+        } else {
+            this.mostrarLogin();
+        }
+    }
+
+    mostrarLogin() {
+        document.body.innerHTML = `
+            <div class="login-container">
+                <div class="login-box">
+                    <div class="login-header">
+                        <i class="fas fa-church"></i>
+                        <h1>Fluxo de Caixa - Igreja</h1>
+                        <p>Faça login para acessar o sistema</p>
+                    </div>
+                    
+                    <form id="login-form" class="login-form">
+                        <div class="form-group">
+                            <label for="login-usuario"><i class="fas fa-user"></i> Usuário</label>
+                            <select id="login-usuario" required>
+                                <option value="">Selecione seu usuário</option>
+                                <option value="pastor">Pastor João</option>
+                                <option value="tesoureiro">Irmão José (Tesoureiro)</option>
+                                <option value="diacono">Diácono Pedro</option>
+                                <option value="secretario">Irmã Maria (Secretária)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="login-senha"><i class="fas fa-lock"></i> Senha</label>
+                            <input type="password" id="login-senha" required placeholder="Digite sua senha">
+                        </div>
+                        
+                        <button type="submit" class="login-btn">
+                            <i class="fas fa-sign-in-alt"></i> Entrar
+                        </button>
+                    </form>
+                    
+                    <div class="login-info">
+                        <p><strong>Senhas padrão:</strong></p>
+                        <p>Pastor: <code>pastor123</code></p>
+                        <p>Tesoureiro: <code>tesouro456</code></p>
+                        <p>Diácono: <code>diacono789</code></p>
+                        <p>Secretária: <code>secret123</code></p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.fazerLogin();
+        });
+    }
+
+    async fazerLogin() {
+        const usuario = document.getElementById('login-usuario').value;
+        const senha = document.getElementById('login-senha').value;
+
+        const resultado = churchDB.userManager.fazerLogin(usuario, senha);
         
-        // Configurar tabs
-        this.setupTabs();
+        if (resultado.success) {
+            this.showNotification(`Bem-vindo, ${resultado.usuario.nome}!`, 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            this.showNotification(resultado.error, 'error');
+        }
+    }
+
+    fazerLogout() {
+        if (confirm('Deseja sair do sistema?')) {
+            churchDB.userManager.fazerLogout();
+            this.mostrarLogin();
+        }
+    }
+
+    mostrarSistema() {
+        // Sistema normal já carregado pelo index.html
     }
 
     setupEventListeners() {
-        // Formulário de entrada
         document.getElementById('entrada-form').addEventListener('submit', async (e) => {
             await this.handleEntrada(e);
         });
 
-        // Formulário de saída
         document.getElementById('saida-form').addEventListener('submit', async (e) => {
             await this.handleSaida(e);
         });
 
-        // Enter para submeter forms
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && e.target.form) {
                 e.target.form.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -47,13 +123,11 @@ class ChurchFinanceApp {
     }
 
     switchTab(tabName) {
-        // Atualizar tabs
         document.querySelectorAll('.tab').forEach(tab => {
             tab.classList.remove('active');
         });
         document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
 
-        // Atualizar conteúdo
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
@@ -63,7 +137,6 @@ class ChurchFinanceApp {
     async handleEntrada(e) {
         e.preventDefault();
         
-        const formData = new FormData(e.target);
         const entradaData = {
             id: Date.now() + Math.random().toString(36).substr(2, 9),
             tipo: document.getElementById('tipo-entrada').value,
@@ -73,23 +146,16 @@ class ChurchFinanceApp {
             timestamp: new Date().toISOString()
         };
 
-        // Validar dados
         if (!this.validateEntrada(entradaData)) return;
 
-        // Mostrar loading
         this.setFormLoading('entrada-form', true);
 
         try {
-            // Salvar no banco de dados
             const result = await churchDB.saveEntrada(entradaData);
             
             if (result.success) {
-                // Adicionar localmente
                 this.transactions.entradas.push(entradaData);
-                
-                // Salvar localmente também
                 churchDB.saveToLocalStorage(this.transactions);
-                
                 this.updateUI();
                 this.showNotification(result.message, result.offline ? 'warning' : 'success');
                 e.target.reset();
@@ -108,7 +174,6 @@ class ChurchFinanceApp {
     async handleSaida(e) {
         e.preventDefault();
         
-        const formData = new FormData(e.target);
         const saidaData = {
             id: Date.now() + Math.random().toString(36).substr(2, 9),
             categoria: document.getElementById('categoria-saida').value,
@@ -118,23 +183,16 @@ class ChurchFinanceApp {
             timestamp: new Date().toISOString()
         };
 
-        // Validar dados
         if (!this.validateSaida(saidaData)) return;
 
-        // Mostrar loading
         this.setFormLoading('saida-form', true);
 
         try {
-            // Salvar no banco de dados
             const result = await churchDB.saveSaida(saidaData);
             
             if (result.success) {
-                // Adicionar localmente
                 this.transactions.saidas.push(saidaData);
-                
-                // Salvar localmente também
                 churchDB.saveToLocalStorage(this.transactions);
-                
                 this.updateUI();
                 this.showNotification(result.message, result.offline ? 'warning' : 'success');
                 e.target.reset();
@@ -193,8 +251,25 @@ class ChurchFinanceApp {
     }
 
     updateUI() {
+        this.updateUserInfo();
         this.updateDashboard();
         this.updateTransactionLists();
+    }
+
+    updateUserInfo() {
+        const usuario = churchDB.userManager.getUsuarioLogado();
+        if (usuario) {
+            const statusElement = document.getElementById('online-status');
+            if (statusElement) {
+                statusElement.innerHTML = `
+                    <i class="fas fa-user"></i> 
+                    ${usuario.nome} (${usuario.funcao})
+                    <button onclick="app.fazerLogout()" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                `;
+            }
+        }
     }
 
     updateDashboard() {
@@ -203,7 +278,6 @@ class ChurchFinanceApp {
         let totalMissao = 0;
         let totalConstrucao = 0;
 
-        // Calcular totais das entradas
         this.transactions.entradas.forEach(entrada => {
             if (entrada.tipo === 'dizimo-oferta') {
                 totalCentral += entrada.valor * 0.6;
@@ -215,12 +289,10 @@ class ChurchFinanceApp {
             }
         });
 
-        // Subtrair saídas do total local
         this.transactions.saidas.forEach(saida => {
             totalLocal -= saida.valor;
         });
 
-        // Atualizar valores no dashboard
         document.getElementById('central-value').textContent = this.formatCurrency(totalCentral);
         document.getElementById('local-value').textContent = this.formatCurrency(totalLocal);
         document.getElementById('missao-value').textContent = this.formatCurrency(totalMissao);
@@ -249,7 +321,6 @@ class ChurchFinanceApp {
             return;
         }
 
-        // Ordenar por data (mais recente primeiro)
         const entradasOrdenadas = [...this.transactions.entradas].sort((a, b) => 
             new Date(b.data) - new Date(a.data)
         );
@@ -291,7 +362,6 @@ class ChurchFinanceApp {
             return;
         }
 
-        // Ordenar por data (mais recente primeiro)
         const saidasOrdenadas = [...this.transactions.saidas].sort((a, b) => 
             new Date(b.data) - new Date(a.data)
         );
@@ -347,8 +417,6 @@ class ChurchFinanceApp {
         }
     }
 
-    // ========== MÉTODOS AUXILIARES ==========
-
     getTipoDescricao(tipo) {
         const tipos = {
             'dizimo-oferta': 'Dízimo e Oferta',
@@ -383,7 +451,11 @@ class ChurchFinanceApp {
             button.disabled = true;
         } else {
             form.classList.remove('loading');
-            button.innerHTML = '<i class="fas fa-save"></i> Registrar Entrada';
+            if (formId === 'entrada-form') {
+                button.innerHTML = '<i class="fas fa-save"></i> Registrar Entrada';
+            } else {
+                button.innerHTML = '<i class="fas fa-save"></i> Registrar Saída';
+            }
             button.disabled = false;
         }
     }
@@ -410,8 +482,6 @@ class ChurchFinanceApp {
         }, 4000);
     }
 
-    // ========== MÉTODOS PÚBLICOS ==========
-
     async testConnection() {
         const result = await churchDB.testConnection();
         this.showNotification(
@@ -435,5 +505,4 @@ class ChurchFinanceApp {
     }
 }
 
-// Inicializar a aplicação
 const app = new ChurchFinanceApp();
