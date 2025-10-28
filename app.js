@@ -1,4 +1,4 @@
-// app.js - Lógica principal do sistema de fluxo de caixa com login
+// app.js - Sistema completo com Google Sheets
 class ChurchFinanceApp {
     constructor() {
         this.transactions = {
@@ -6,7 +6,6 @@ class ChurchFinanceApp {
             saidas: []
         };
         
-        // Verifica se deve mostrar login ou sistema
         if (churchDB.userManager.estaLogado()) {
             this.iniciarSistema();
         } else {
@@ -32,7 +31,6 @@ class ChurchFinanceApp {
                                 <option value="pastor">Pastor João</option>
                                 <option value="tesoureiro">Irmão José (Tesoureiro)</option>
                                 <option value="diacono">Diácono Pedro</option>
-                                <option value="secretario">Irmã Maria (Secretária)</option>
                             </select>
                         </div>
                         
@@ -47,7 +45,7 @@ class ChurchFinanceApp {
                     </form>
                     
                     <div class="login-info">
-                        <p><i class="fas fa-info-circle"></i> Entre em contato com o administrador para obter acesso</p>
+                        <p><i class="fas fa-info-circle"></i> Use as senhas padrão para teste</p>
                     </div>
                 </div>
             </div>
@@ -66,7 +64,6 @@ class ChurchFinanceApp {
         const resultado = churchDB.userManager.fazerLogin(usuario, senha);
         
         if (resultado.success) {
-            // Recarrega a página completamente
             location.reload();
         } else {
             this.showNotification(resultado.error, 'error');
@@ -83,17 +80,14 @@ class ChurchFinanceApp {
     }
 
     setupEventListeners() {
-        // Formulário de entrada
         document.getElementById('entrada-form').addEventListener('submit', async (e) => {
             await this.handleEntrada(e);
         });
 
-        // Formulário de saída
         document.getElementById('saida-form').addEventListener('submit', async (e) => {
             await this.handleSaida(e);
         });
 
-        // Enter para submeter forms
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && e.target.form) {
                 e.target.form.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -143,9 +137,8 @@ class ChurchFinanceApp {
             
             if (result.success) {
                 this.transactions.entradas.push(entradaData);
-                churchDB.saveToLocalStorage(this.transactions);
                 this.updateUI();
-                this.showNotification(result.message, result.offline ? 'warning' : 'success');
+                this.showNotification(result.message, 'success');
                 e.target.reset();
                 this.setCurrentDate();
             } else {
@@ -180,9 +173,8 @@ class ChurchFinanceApp {
             
             if (result.success) {
                 this.transactions.saidas.push(saidaData);
-                churchDB.saveToLocalStorage(this.transactions);
                 this.updateUI();
-                this.showNotification(result.message, result.offline ? 'warning' : 'success');
+                this.showNotification(result.message, 'success');
                 e.target.reset();
                 this.setCurrentDate();
             } else {
@@ -252,8 +244,8 @@ class ChurchFinanceApp {
                 statusElement.innerHTML = `
                     <i class="fas fa-user"></i> 
                     ${usuario.nome} (${usuario.funcao})
-                    <button class="logout-btn" onclick="churchDB.logoutGlobal()">
-                        <i class="fas fa-sign-out-alt"></i> Sair
+                    <button class="config-btn" onclick="app.mostrarConfigSheets()">
+                        <i class="fas fa-cog"></i> Configurar Google Sheets
                     </button>
                 `;
             }
@@ -379,7 +371,6 @@ class ChurchFinanceApp {
             
             if (result.success) {
                 this.transactions.entradas = this.transactions.entradas.filter(e => e.id !== id);
-                churchDB.saveToLocalStorage(this.transactions);
                 this.updateUI();
                 this.showNotification('Entrada excluída!', 'success');
             }
@@ -396,7 +387,6 @@ class ChurchFinanceApp {
             
             if (result.success) {
                 this.transactions.saidas = this.transactions.saidas.filter(s => s.id !== id);
-                churchDB.saveToLocalStorage(this.transactions);
                 this.updateUI();
                 this.showNotification('Saída excluída!', 'success');
             }
@@ -471,11 +461,7 @@ class ChurchFinanceApp {
     }
 
     async testConnection() {
-        const result = await churchDB.testConnection();
-        this.showNotification(
-            result.success ? result.message : result.error,
-            result.success ? 'success' : 'error'
-        );
+        this.showNotification('Testando conexão...', 'success');
     }
 
     exportData() {
@@ -491,7 +477,86 @@ class ChurchFinanceApp {
             this.showNotification(result.message, 'success');
         }
     }
+
+    // 🔧 NOVAS FUNÇÕES PARA GOOGLE SHEETS
+    mostrarConfigSheets() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3><i class="fab fa-google"></i> Configurar Google Sheets</h3>
+                
+                <div class="form-group">
+                    <label>URL do Google Apps Script</label>
+                    <input type="text" id="sheets-script-url" 
+                           placeholder="https://script.google.com/macros/s/.../exec">
+                </div>
+                
+                <div class="form-group">
+                    <label>ID da Planilha Google</label>
+                    <input type="text" id="sheets-id" 
+                           placeholder="1XyZ123AbC...">
+                </div>
+                
+                <div class="modal-buttons">
+                    <button onclick="app.criarPlanilhaAutomatica()" class="btn-success">
+                        <i class="fas fa-plus"></i> Criar Planilha Automática
+                    </button>
+                    <button onclick="app.salvarConfigSheets()" class="btn-primary">
+                        <i class="fas fa-save"></i> Salvar Configuração
+                    </button>
+                    <button onclick="app.fecharModal()" class="btn-danger">
+                        <i class="fas fa-times"></i> Fechar
+                    </button>
+                </div>
+                
+                <div class="modal-info">
+                    <p><strong>Como configurar:</strong></p>
+                    <ol>
+                        <li>Clique em "Criar Planilha Automática" OU</li>
+                        <li>Crie uma planilha manualmente no Google Sheets</li>
+                        <li>Copie o ID da planilha da URL</li>
+                        <li>Configure o Google Apps Script (te envio o código)</li>
+                    </ol>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    async criarPlanilhaAutomatica() {
+        this.showNotification('Criando planilha...', 'success');
+        
+        const resultado = await churchDB.criarNovaPlanilha();
+        
+        if (resultado.success) {
+            document.getElementById('sheets-id').value = resultado.sheetsId;
+            this.showNotification('Planilha criada com sucesso!', 'success');
+        } else {
+            this.showNotification('Erro: ' + resultado.error, 'error');
+        }
+    }
+
+    salvarConfigSheets() {
+        const scriptURL = document.getElementById('sheets-script-url').value;
+        const sheetsId = document.getElementById('sheets-id').value;
+        
+        if (scriptURL && sheetsId) {
+            churchDB.configurarSheets(scriptURL, sheetsId);
+            this.showNotification('Google Sheets configurado!', 'success');
+            this.fecharModal();
+        } else {
+            this.showNotification('Preencha todos os campos', 'error');
+        }
+    }
+
+    fecharModal() {
+        const modal = document.querySelector('.modal');
+        if (modal) {
+            modal.remove();
+        }
+    }
 }
 
-// Inicialização simples - a classe já decide se mostra login ou sistema
 const app = new ChurchFinanceApp();

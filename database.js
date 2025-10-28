@@ -1,4 +1,4 @@
-// database.js - Sistema de gerenciamento de banco de dados online com usuários
+// database.js - Sistema completo com Google Sheets
 class UserManager {
     constructor() {
         this.usuarios = this.carregarUsuarios();
@@ -6,39 +6,27 @@ class UserManager {
     }
 
     carregarUsuarios() {
-        // Usuários padrão - pode ser alterado posteriormente
         const usuariosPadrao = [
             { 
                 id: 'pastor', 
                 senha: 'pastor123', 
                 nome: 'Pastor João', 
-                funcao: 'Liderança',
-                email: 'pastor@igreja.com'
+                funcao: 'Liderança'
             },
             { 
                 id: 'tesoureiro', 
                 senha: 'tesouro456', 
                 nome: 'Irmão José', 
-                funcao: 'Tesoureiro',
-                email: 'tesoureiro@igreja.com'
+                funcao: 'Tesoureiro'
             },
             { 
                 id: 'diacono', 
                 senha: 'diacono789', 
                 nome: 'Diácono Pedro', 
-                funcao: 'Diácono',
-                email: 'diacono@igreja.com'
-            },
-            { 
-                id: 'secretario', 
-                senha: 'secret123', 
-                nome: 'Irmã Maria', 
-                funcao: 'Secretária',
-                email: 'secretaria@igreja.com'
+                funcao: 'Diácono'
             }
         ];
 
-        // Tentar carregar usuários personalizados, senão usar os padrão
         const usuariosSalvos = localStorage.getItem('churchUsers');
         return usuariosSalvos ? JSON.parse(usuariosSalvos) : usuariosPadrao;
     }
@@ -59,11 +47,6 @@ class UserManager {
         }
     }
 
-    fazerLogout() {
-        this.usuarioLogado = null;
-        localStorage.removeItem('churchLoggedUser');
-    }
-
     getUsuarioLogado() {
         if (!this.usuarioLogado) {
             const saved = localStorage.getItem('churchLoggedUser');
@@ -75,308 +58,236 @@ class UserManager {
     estaLogado() {
         return this.getUsuarioLogado() !== null;
     }
+}
 
-    alterarSenha(usuarioId, senhaAtual, novaSenha) {
-        const usuario = this.usuarios.find(u => u.id === usuarioId);
-        
-        if (usuario && usuario.senha === senhaAtual) {
-            usuario.senha = novaSenha;
-            this.salvarUsuarios();
-            return { success: true };
-        } else {
-            return { success: false, error: 'Senha atual incorreta' };
+class GoogleSheetsManager {
+    constructor() {
+        this.scriptURL = '';
+        this.sheetsId = '';
+        this.carregarConfig();
+    }
+
+    carregarConfig() {
+        this.scriptURL = localStorage.getItem('churchSheetsScriptURL') || '';
+        this.sheetsId = localStorage.getItem('churchSheetsID') || '';
+    }
+
+    salvarConfig(scriptURL, sheetsId) {
+        this.scriptURL = scriptURL;
+        this.sheetsId = sheetsId;
+        localStorage.setItem('churchSheetsScriptURL', scriptURL);
+        localStorage.setItem('churchSheetsID', sheetsId);
+    }
+
+    async enviarParaSheets(aba, dados) {
+        if (!this.scriptURL || !this.sheetsId) {
+            return { success: false, error: 'Google Sheets não configurado' };
+        }
+
+        try {
+            const response = await fetch(this.scriptURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'salvar_dados',
+                    sheetsId: this.sheetsId,
+                    aba: aba,
+                    dados: dados
+                })
+            });
+
+            const resultado = await response.json();
+            return resultado;
+            
+        } catch (error) {
+            return { success: false, error: 'Erro de conexão: ' + error.message };
         }
     }
 
-    adicionarUsuario(novoUsuario) {
-        if (this.usuarios.find(u => u.id === novoUsuario.id)) {
-            return { success: false, error: 'ID de usuário já existe' };
+    async buscarDeSheets(aba) {
+        if (!this.scriptURL || !this.sheetsId) {
+            return { success: false, error: 'Google Sheets não configurado' };
         }
-        
-        this.usuarios.push(novoUsuario);
-        this.salvarUsuarios();
-        return { success: true };
+
+        try {
+            const response = await fetch(this.scriptURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'buscar_dados',
+                    sheetsId: this.sheetsId,
+                    aba: aba
+                })
+            });
+
+            const resultado = await response.json();
+            return resultado;
+            
+        } catch (error) {
+            return { success: false, error: 'Erro de conexão: ' + error.message };
+        }
     }
 
-    recuperarLogin() {
-        const saved = localStorage.getItem('churchLoggedUser');
-        if (saved) {
-            this.usuarioLogado = JSON.parse(saved);
-            return this.usuarioLogado;
+    async criarPlanilha() {
+        if (!this.scriptURL) {
+            return { success: false, error: 'Google Apps Script não configurado' };
         }
-        return null;
+
+        try {
+            const response = await fetch(this.scriptURL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'criar_planilha'
+                })
+            });
+
+            const resultado = await response.json();
+            
+            if (resultado.success) {
+                this.sheetsId = resultado.sheetsId;
+                localStorage.setItem('churchSheetsID', this.sheetsId);
+            }
+            
+            return resultado;
+            
+        } catch (error) {
+            return { success: false, error: 'Erro ao criar planilha: ' + error.message };
+        }
     }
 }
 
 class ChurchDatabase {
     constructor() {
         this.userManager = new UserManager();
-        this.baseURL = 'https://jsonplaceholder.typicode.com';
-        this.isConnected = false;
-        this.pendingOperations = [];
+        this.sheetsManager = new GoogleSheetsManager();
         this.init();
     }
 
     init() {
-        this.loadConfig();
-        this.testConnection();
-    }
-
-    loadConfig() {
-        const savedURL = localStorage.getItem('churchDB_url');
-        if (savedURL) {
-            this.baseURL = savedURL;
-            document.getElementById('db-url').value = savedURL;
+        if (this.sheetsManager.sheetsId) {
+            this.sincronizarComSheets();
         }
     }
 
-    saveConfig() {
-        const dbURL = document.getElementById('db-url').value;
-        if (dbURL) {
-            this.baseURL = dbURL;
-            localStorage.setItem('churchDB_url', dbURL);
-        }
-    }
-
-    async testConnection() {
+    async sincronizarComSheets() {
         try {
-            this.updateStatus('Conectando...', 'connecting');
+            const entradasResult = await this.sheetsManager.buscarDeSheets('Entradas');
+            const saidasResult = await this.sheetsManager.buscarDeSheets('Saidas');
             
-            this.saveConfig();
-
-            const response = await fetch(`${this.baseURL}/posts/1`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            this.isConnected = response.ok;
-            
-            if (this.isConnected) {
-                this.updateStatus('Online - Salvando em tempo real', 'online');
-                this.processPendingOperations();
-                return { success: true, message: 'Conectado ao banco de dados!' };
-            } else {
-                throw new Error('Servidor não respondeu corretamente');
+            if (entradasResult.success) {
+                this.salvarLocalmente('entradas', entradasResult.dados);
+            }
+            if (saidasResult.success) {
+                this.salvarLocalmente('saidas', saidasResult.dados);
             }
             
         } catch (error) {
-            this.isConnected = false;
-            this.updateStatus('Offline - Dados locais', 'offline');
-            return { 
-                success: false, 
-                error: `Erro de conexão: ${error.message}` 
-            };
+            console.warn('Erro na sincronização:', error);
         }
     }
 
     async saveEntrada(entradaData) {
         const usuario = this.userManager.getUsuarioLogado();
-        const operation = {
-            type: 'entrada',
-            data: {
-                ...entradaData,
-                registradoPor: usuario ? usuario.id : 'anonimo',
-                registradoPorNome: usuario ? usuario.nome : 'Anônimo'
-            },
-            timestamp: new Date().toISOString()
+        const dadosCompletos = {
+            ...entradaData,
+            registradoPor: usuario ? usuario.nome : 'Anônimo',
+            dataRegistro: new Date().toISOString()
         };
 
-        if (!this.isConnected) {
-            this.storeOffline(operation);
-            return { 
-                success: true, 
-                offline: true,
-                message: 'Salvo localmente (modo offline)'
-            };
-        }
+        this.salvarLocalmente('entradas', dadosCompletos);
 
-        try {
-            const response = await this.simulateApiCall('/entradas', 'POST', operation.data);
-            
-            if (response.success) {
+        if (this.sheetsManager.sheetsId) {
+            const resultado = await this.sheetsManager.enviarParaSheets('Entradas', dadosCompletos);
+            if (resultado.success) {
                 return { 
                     success: true, 
-                    id: response.id,
-                    message: 'Entrada salva com sucesso!'
+                    message: 'Entrada salva localmente e no Google Sheets!' 
                 };
-            } else {
-                throw new Error('Erro ao salvar no servidor');
             }
-            
-        } catch (error) {
-            this.storeOffline(operation);
-            return { 
-                success: true, 
-                offline: true,
-                message: 'Salvo localmente (erro de conexão)'
-            };
         }
+
+        return { 
+            success: true, 
+            message: 'Entrada salva localmente' 
+        };
     }
 
     async saveSaida(saidaData) {
         const usuario = this.userManager.getUsuarioLogado();
-        const operation = {
-            type: 'saida',
-            data: {
-                ...saidaData,
-                registradoPor: usuario ? usuario.id : 'anonimo',
-                registradoPorNome: usuario ? usuario.nome : 'Anônimo'
-            },
-            timestamp: new Date().toISOString()
+        const dadosCompletos = {
+            ...saidaData,
+            registradoPor: usuario ? usuario.nome : 'Anônimo',
+            dataRegistro: new Date().toISOString()
         };
 
-        if (!this.isConnected) {
-            this.storeOffline(operation);
-            return { 
-                success: true, 
-                offline: true,
-                message: 'Salvo localmente (modo offline)'
-            };
-        }
+        this.salvarLocalmente('saidas', dadosCompletos);
 
-        try {
-            const response = await this.simulateApiCall('/saidas', 'POST', operation.data);
-            
-            if (response.success) {
+        if (this.sheetsManager.sheetsId) {
+            const resultado = await this.sheetsManager.enviarParaSheets('Saidas', dadosCompletos);
+            if (resultado.success) {
                 return { 
                     success: true, 
-                    id: response.id,
-                    message: 'Saída salva com sucesso!'
+                    message: 'Saída salva localmente e no Google Sheets!' 
                 };
-            } else {
-                throw new Error('Erro ao salvar no servidor');
             }
-            
-        } catch (error) {
-            this.storeOffline(operation);
-            return { 
-                success: true, 
-                offline: true,
-                message: 'Salvo localmente (erro de conexão)'
-            };
         }
+
+        return { 
+            success: true, 
+            message: 'Saída salva localmente' 
+        };
+    }
+
+    salvarLocalmente(tipo, dados) {
+        const chave = `churchFinance_${tipo}`;
+        const dadosAtuais = this.carregarLocalmente(tipo);
+        dadosAtuais.push(dados);
+        localStorage.setItem(chave, JSON.stringify(dadosAtuais));
+    }
+
+    carregarLocalmente(tipo) {
+        const chave = `churchFinance_${tipo}`;
+        const dados = localStorage.getItem(chave);
+        return dados ? JSON.parse(dados) : [];
     }
 
     async loadTransactions() {
-        try {
-            if (!this.isConnected) {
-                return this.loadFromLocalStorage();
-            }
-
-            const response = await this.simulateApiCall('/transactions', 'GET');
-            
-            if (response.success) {
-                return response.data;
-            } else {
-                throw new Error('Erro ao carregar dados');
-            }
-            
-        } catch (error) {
-            console.warn('Usando dados locais:', error.message);
-            return this.loadFromLocalStorage();
-        }
+        const entradas = this.carregarLocalmente('entradas');
+        const saidas = this.carregarLocalmente('saidas');
+        
+        return { entradas, saidas };
     }
 
     async deleteTransaction(type, id) {
-        try {
-            if (!this.isConnected) {
-                this.deleteLocal(type, id);
-                return { success: true, offline: true };
-            }
-
-            const response = await this.simulateApiCall(`/${type}/${id}`, 'DELETE');
-            return { success: response.success };
-            
-        } catch (error) {
-            this.deleteLocal(type, id);
-            return { success: true, offline: true };
-        }
-    }
-
-    async simulateApiCall(endpoint, method, data = null) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const dados = this.carregarLocalmente(type);
+        const dadosAtualizados = dados.filter(item => item.id !== id);
+        localStorage.setItem(`churchFinance_${type}`, JSON.stringify(dadosAtualizados));
         
-        const generateId = () => Date.now() + Math.random().toString(36).substr(2, 9);
-        
-        return {
-            success: true,
-            id: generateId(),
-            data: {
-                entradas: this.loadFromLocalStorage().entradas,
-                saidas: this.loadFromLocalStorage().saidas
-            }
-        };
+        return { success: true };
     }
 
-    storeOffline(operation) {
-        const pending = this.getPendingOperations();
-        pending.push(operation);
-        localStorage.setItem('churchDB_pending', JSON.stringify(pending));
+    configurarSheets(scriptURL, sheetsId) {
+        this.sheetsManager.salvarConfig(scriptURL, sheetsId);
+        return { success: true, message: 'Google Sheets configurado!' };
     }
 
-    async processPendingOperations() {
-        const pending = this.getPendingOperations();
-        if (pending.length === 0) return;
-
-        console.log(`Processando ${pending.length} operações pendentes...`);
-        
-        for (const operation of pending) {
-            try {
-                if (operation.type === 'entrada') {
-                    await this.saveEntrada(operation.data);
-                } else if (operation.type === 'saida') {
-                    await this.saveSaida(operation.data);
-                }
-            } catch (error) {
-                console.error('Erro ao processar operação pendente:', error);
-            }
-        }
-
-        localStorage.removeItem('churchDB_pending');
-    }
-
-    getPendingOperations() {
-        const pending = localStorage.getItem('churchDB_pending');
-        return pending ? JSON.parse(pending) : [];
-    }
-
-    loadFromLocalStorage() {
-        const saved = localStorage.getItem('churchFinance_data');
-        if (saved) {
-            return JSON.parse(saved);
-        }
-        return { entradas: [], saidas: [] };
-    }
-
-    saveToLocalStorage(data) {
-        localStorage.setItem('churchFinance_data', JSON.stringify(data));
-    }
-
-    deleteLocal(type, id) {
-        const data = this.loadFromLocalStorage();
-        if (type === 'entradas') {
-            data.entradas = data.entradas.filter(item => item.id !== id);
-        } else if (type === 'saidas') {
-            data.saidas = data.saidas.filter(item => item.id !== id);
-        }
-        this.saveToLocalStorage(data);
-    }
-
-    updateStatus(message, status) {
-        const statusElement = document.getElementById('status-text');
-        const statusContainer = document.getElementById('online-status');
-        
-        if (statusElement && statusContainer) {
-            statusElement.textContent = message;
-            statusContainer.className = `online-status ${status}`;
-        }
+    async criarNovaPlanilha() {
+        return await this.sheetsManager.criarPlanilha();
     }
 
     exportData() {
-        const data = this.loadFromLocalStorage();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { 
+        const entradas = this.carregarLocalmente('entradas');
+        const saidas = this.carregarLocalmente('saidas');
+        const dadosCompletos = { entradas, saidas };
+        
+        const blob = new Blob([JSON.stringify(dadosCompletos, null, 2)], { 
             type: 'application/json' 
         });
         const url = URL.createObjectURL(blob);
@@ -393,19 +304,11 @@ class ChurchDatabase {
 
     clearData() {
         if (confirm('Tem certeza que deseja limpar TODOS os dados? Esta ação não pode ser desfeita.')) {
-            localStorage.removeItem('churchFinance_data');
-            localStorage.removeItem('churchDB_pending');
+            localStorage.removeItem('churchFinance_entradas');
+            localStorage.removeItem('churchFinance_saidas');
             return { success: true, message: 'Todos os dados foram limpos!' };
         }
         return { success: false, message: 'Operação cancelada' };
-    }
-
-    // 🔐 FUNÇÃO GLOBAL PARA LOGOUT - 100% FUNCIONAL
-    logoutGlobal() {
-        if (confirm('Deseja sair do sistema?')) {
-            this.userManager.fazerLogout();
-            location.reload();
-        }
     }
 }
 
