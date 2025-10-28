@@ -9,18 +9,13 @@ class ChurchFinanceApp {
     }
 
     async init() {
-        if (churchDB.userManager.estaLogado()) {
-            this.mostrarSistema();
-            this.setupEventListeners();
-            this.setCurrentDate();
-            await this.loadData();
-            this.updateUI();
-            this.setupTabs();
-        } else {
-            this.mostrarLogin();
-        }
+    if (churchDB.userManager.estaLogado()) {
+        // Se já está logado, mostrar sistema diretamente
+        this.mostrarSistema();
+    } else {
+        this.mostrarLogin();
     }
-
+}
     mostrarLogin() {
         document.body.innerHTML = `
             <div class="login-container">
@@ -83,15 +78,25 @@ class ChurchFinanceApp {
     }
 
     fazerLogout() {
-        if (confirm('Deseja sair do sistema?')) {
-            churchDB.userManager.fazerLogout();
+    if (confirm('Deseja sair do sistema?')) {
+        churchDB.userManager.fazerLogout();
+        this.showNotification('Logout realizado com sucesso!', 'success');
+        setTimeout(() => {
             this.mostrarLogin();
-        }
+        }, 500);
     }
+}
 
     mostrarSistema() {
-        // Sistema normal já carregado pelo index.html
-    }
+    // Em vez de recarregar a página, mostramos o conteúdo diretamente
+    document.body.innerHTML = document.querySelector('.container').outerHTML;
+    this.setupEventListeners();
+    this.setCurrentDate();
+    this.loadData().then(() => {
+        this.updateUI();
+        this.setupTabs();
+    });
+}
 
     setupEventListeners() {
         document.getElementById('entrada-form').addEventListener('submit', async (e) => {
@@ -474,8 +479,8 @@ class ChurchFinanceApp {
         notification.className = `notification ${type} show`;
         
         setTimeout(() => {
-            notification.classList.remove('show');
-        }, 4000);
+    this.mostrarSistema();
+            }, 500);
     }
 
     async testConnection() {

@@ -97,8 +97,19 @@ class UserManager {
         this.salvarUsuarios();
         return { success: true };
     }
+
+    // ⭐⭐ ADICIONE ESTA FUNÇÃO AQUI ⭐⭐ - NO FINAL DA CLASSE UserManager
+    recuperarLogin() {
+        const saved = localStorage.getItem('churchLoggedUser');
+        if (saved) {
+            this.usuarioLogado = JSON.parse(saved);
+            return this.usuarioLogado;
+        }
+        return null;
+    }
 }
 
+// ⚠️⚠️ A classe ChurchDatabase começa AQUI - a função acima deve estar ANTES desta linha ⚠️⚠️
 class ChurchDatabase {
     constructor() {
         this.userManager = new UserManager();
