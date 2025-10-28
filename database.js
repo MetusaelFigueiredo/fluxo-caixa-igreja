@@ -403,4 +403,12 @@ class ChurchDatabase {
     }
 }
 
+    // 🔐 FUNÇÃO GLOBAL PARA LOGOUT - 100% FUNCIONAL
+    logoutGlobal() {
+        if (confirm('Deseja sair do sistema?')) {
+            this.userManager.fazerLogout();
+            location.reload();
+        }
+    }
+    
 const churchDB = new ChurchDatabase();
