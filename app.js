@@ -502,9 +502,11 @@ class ChurchFinanceApp {
 }
 
 // Inicialização inteligente - verifica se já está logado
-const app = new ChurchFinanceApp();
-
-// Se já está logado, inicia o sistema normalmente
 if (churchDB.userManager.estaLogado()) {
+    // Se já está logado, mostra o sistema diretamente
+    const app = new ChurchFinanceApp();
     app.iniciarSistema();
+} else {
+    // Se não está logado, mostra a tela de login
+    const app = new ChurchFinanceApp();
 }
