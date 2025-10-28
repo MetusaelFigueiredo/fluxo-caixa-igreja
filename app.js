@@ -54,11 +54,7 @@ class ChurchFinanceApp {
                     </form>
                     
                     <div class="login-info">
-                        <p><strong>Senhas padrão:</strong></p>
-                        <p>Pastor: <code>pastor123</code></p>
-                        <p>Tesoureiro: <code>tesouro456</code></p>
-                        <p>Diácono: <code>diacono789</code></p>
-                        <p>Secretária: <code>secret123</code></p>
+                       <p><i class="fas fa-info-circle"></i> Entre em contato com o administrador para obter acesso</p>
                     </div>
                 </div>
             </div>
